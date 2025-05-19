@@ -13,7 +13,7 @@ import * as THREE from 'three';
 function createLabelTexture(text: string): THREE.Texture {
   const canvas = document.createElement('canvas');
   canvas.width = 2048;
-  canvas.height = 400;
+  canvas.height = 360;
   const ctx = canvas.getContext('2d')!;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -43,7 +43,7 @@ function LabelCylinder({ labelText }: { labelText: any }) {
   const color = new THREE.Color().setHex( 0x112233 );
 
   return (
-    <mesh position={[0, -0.65, -2]} rotation={[0.1, Math.PI, 0]} scale={[1, 1, 1]}>
+    <mesh position={[0, -0.63, -2]} rotation={[0.09, Math.PI, 0]} scale={[1, 1, 1]}>
       <cylinderGeometry args={[0.5, 0.5, 0.5, 256, 1, true]} />
       <meshBasicMaterial
         ref={materialRef}
