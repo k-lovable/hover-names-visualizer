@@ -12,7 +12,7 @@ const NameVisualization: React.FC = () => {
   const navigate = useNavigate();
   const [nameData, setNameData] = useState<NameData[]>([]);
   const [activeNameId, setActiveNameId] = useState<number | null>(null);
-  const [imageUrl] = useState('/placeholder.svg'); // Default placeholder image
+  const [imageUrl] = useState('/bluebottle.png'); // Default placeholder image
   const canvasRef = useRef(null);
 
     useEffect(() => {
