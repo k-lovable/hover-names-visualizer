@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,52 @@ import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { NameData, NameDataFile } from '@/types';
 import { toast } from 'sonner';
+import { Canvas, useFrame } from '@react-three/fiber';
+import * as THREE from 'three';
+
+function createLabelTexture(text: string): THREE.Texture {
+  const canvas = document.createElement('canvas');
+  canvas.width = 2048;
+  canvas.height = 400;
+  const ctx = canvas.getContext('2d')!;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  ctx.fillStyle = '#111';
+  ctx.font = 'normal 80px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.needsUpdate = true;
+  return texture;
+}
+
+function LabelCylinder({ labelText }: { labelText: any }) {
+
+  console.log(labelText)
+  const materialRef = useRef<THREE.MeshBasicMaterial>(null!);
+
+  const texture = useMemo(() => createLabelTexture(labelText), [labelText]);
+
+  useEffect(() => {
+    materialRef.current.map = texture;
+    materialRef.current.needsUpdate = true;
+  }, [texture]);
+
+  const color = new THREE.Color().setHex( 0x112233 );
+
+  return (
+    <mesh position={[0, -0.65, -2]} rotation={[0.1, Math.PI, 0]} scale={[1, 1, 1]}>
+      <cylinderGeometry args={[0.5, 0.5, 0.5, 256, 1, true]} />
+      <meshBasicMaterial
+        ref={materialRef}
+        transparent
+        side={THREE.DoubleSide}
+      />
+    </mesh>
+  );
+}
 
 const NameVisualization: React.FC = () => {
   const navigate = useNavigate();
@@ -14,44 +60,50 @@ const NameVisualization: React.FC = () => {
   const [activeNameId, setActiveNameId] = useState<number | null>(null);
   const [imageUrl] = useState('/bluebottle.png'); // Default placeholder image
   const canvasRef = useRef(null);
-
-    useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || activeNameId === null) return;
-
-    const ctx = canvas.getContext("2d");
-    const { name, x, y } = nameData[activeNameId];
-
-    const width = canvas.width;
-    const height = canvas.height;
-
-    ctx.clearRect(0, 0, width, height);
-
-    // ---- Draw text with cylindrical distortion ----
-    const centerX = (x / 100) * width;
-    const centerY = (y / 100) * height;
-    const text = name;
-
-    ctx.font = "32px sans-serif";
-    ctx.fillStyle = "#000";
-
-    const radius = 100;
-    const angleStep = (Math.PI / text.length) * 0.8;
-
-    for (let i = 0; i < text.length; i++) {
-      const char = text[i];
-      const angle = (i - text.length / 2) * angleStep;
-
-      const charX = centerX + Math.sin(angle) * radius;
-      const charY = centerY + Math.cos(angle) * 10;
-
-      ctx.save();
-      ctx.translate(charX, charY);
-      ctx.rotate(angle * 0.3);
-      ctx.fillText(char, 0, 0);
-      ctx.restore();
-    }
-  }, [nameData, activeNameId]);
+  // useEffect(() => {
+  //   const canvas = canvasRef.current;
+  //   if (!canvas || activeNameId === null) return;
+  
+  //   const ctx = canvas.getContext("2d");
+  //   const { name } = nameData[activeNameId];
+  
+  //   const width = canvas.width;
+  //   const height = canvas.height;
+  
+  //   ctx.clearRect(0, 0, width, height);
+  
+  //   // Fixed label position (middle of white rectangle)
+  //   const centerX = width * 0.5;
+  //   const centerY = height * 0.73;
+  
+  //   const fontSize = 16;
+  //   const radius = 60;
+  //   const verticalBend = 8;
+  //   const angleMultiplier = 0.2;
+  //   const angleStepBase = 0.6;
+  
+  //   ctx.font = `${fontSize}px sans-serif`;
+  //   ctx.fillStyle = "#111";
+  //   ctx.textBaseline = "middle";
+  //   ctx.textAlign = "center";
+  
+  //   const angleStep = (Math.PI / name.length) * angleStepBase;
+  
+  //   for (let i = 0; i < name.length; i++) {
+  //     const char = name[i];
+  //     const angle = (i - name.length / 2) * angleStep;
+  
+  //     const charX = centerX + Math.sin(angle) * radius;
+  //     const charY = centerY + Math.cos(angle) * verticalBend;
+  
+  //     ctx.save();
+  //     ctx.translate(charX, charY);
+  //     ctx.rotate(angle * angleMultiplier);
+  //     ctx.fillText(char, 0, 0);
+  //     ctx.restore();
+  //   }
+  // }, [nameData, activeNameId]);
+  
 
 
   useEffect(() => {
@@ -107,19 +159,20 @@ const NameVisualization: React.FC = () => {
 
         {/* Image visualization */}
         <Card className="md:w-2/3 h-[500px] md:h-auto overflow-hidden relative flex items-center justify-center">
-          <div className="relative w-full h-full">
-            <img 
-              src={imageUrl} 
-              alt="Bottle preview" 
-              className="object-contain w-full h-full p-4"
-            />
-            <canvas
-              ref={canvasRef}
-              width={600}
-              height={500}
-              className="absolute left-0 top-0 w-full h-full pointer-events-none z-10"
-            />
-          </div>
+          <div className="relative w-[500px] h-[600px] mx-auto">
+          <img
+            src="/bluebottle.png" // or your actual public path
+            className="absolute top-0 left-0 w-full h-full object-contain z-0"
+            alt="Bottle"
+          />
+          <Canvas
+            className="absolute top-0 left-0 w-full h-full z-10 pointer-events-none"
+            camera={{ position: [0, 0, 5], fov: 30 }}
+          >
+            <ambientLight intensity={10} />
+            <LabelCylinder labelText={nameData[activeNameId] ? nameData[activeNameId].name : ''} />
+          </Canvas>
+        </div>
         </Card>
       </div>
     </div>
